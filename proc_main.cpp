@@ -264,7 +264,6 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 											((double*)pglobalBuffer)[i]=(GetFrequencyIntensity(re,im))/6000;
 											}*/
 
-
 											/*int imax = ((double*)pglobalBuffer)[0], maxi = 0;
 
 											for (size_t i = 0; i < FFT/2; i++)
@@ -280,7 +279,6 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 											maxfreq = freq;
 
 											indexofmaxfreq = maxi;*/
-
 
 											/*for (size_t i = maxi - 25; i < maxi+25; i++)
 											{
@@ -329,7 +327,6 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 												((double*)pglobalBuffer)[i] = (GetFrequencyIntensity(re, im)) / 6000;
 											}
 
-
 											buffer_size = FFT / 2;//k;
 											InvalidateRect(hwnd_main, 0, 1);
 
@@ -365,8 +362,6 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 											signal[i].m_re = 13000;
 											signal[i].m_im = 13000;
 											}*/
-
-											
 
 											//reverse transform
 											CFFT::Inverse(signal, FFT);

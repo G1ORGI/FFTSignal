@@ -27,7 +27,7 @@
 #include "bass_functions.cpp"
 
 #include "functions.cpp"
-#include "proc_main.cpp"
+#include "proc_main.cpp" 
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib,"..\\..\\libraries\\bass24\\bass.lib")
@@ -37,7 +37,7 @@ const wchar_t szClassName[] = L"FFT Signal";
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 { 
 
-plusSignals(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\1.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\2.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\3.wav", 1);
+//plusSignals(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\3.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\2.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\4.wav", 2);
 InitCommonControls();
 
     WNDCLASSEXW wc;

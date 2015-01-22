@@ -233,7 +233,7 @@ MoveToEx(hDC, 0, height/2, NULL);
 //				SetPixel(hDC, centerX + x, centerY + y, RGB(0, 255, 0));
 
 //DrawFilledCircle(hDC, centerX, centerY, 100);
-circle(hDC, centerX, centerY, 200);
+//circle(hDC, centerX, centerY, 200);
 //------------------------------------------------------------	
 
 	if(sz > 1)
@@ -858,7 +858,7 @@ void initAudioDevice(HWND hwnd)
 								*/
 							//InRecord = TRUE;
 
-							createWaveFile(L"Recorded.wav", waveFormat.nSamplesPerSec, waveFormat.nChannels, waveFormat.wBitsPerSample, &w_header_struct);
+							//createWaveFile(L"Recorded.wav", waveFormat.nSamplesPerSec, waveFormat.nChannels, waveFormat.wBitsPerSample, &w_header_struct);
 
 							if ((err = waveInStart(WaveInHandle)))
 							{
@@ -992,10 +992,14 @@ size2 = getSampleDataFromWaveFile(second_file_name, &second_data);
 					break;
 
 					case 3: //multiple
+					sign = '*';
+					sum = firstshort * secondshort;
 					//sum = mylib__2_byte_to_short(first_data + i) * mylib__2_byte_to_short(second_data + i);
 					break;
 
 					case 4: //devide
+					sign = '/';
+					sum = firstshort / secondshort;
 					//sum = mylib__2_byte_to_short(first_data + i) / mylib__2_byte_to_short(second_data + i);
 					break;
 
@@ -1003,7 +1007,7 @@ size2 = getSampleDataFromWaveFile(second_file_name, &second_data);
 					break;
 				}
 					
-				if(sum > 32767)
+				/*if(sum > 32767)
 				{
 				sum = 32767;
 				sprintf(str,"%d\t%c\t%d\t=\t%d\t%d - %d\r\n", firstshort, sign, secondshort,sum, z++,i);
@@ -1015,7 +1019,7 @@ size2 = getSampleDataFromWaveFile(second_file_name, &second_data);
 
 				sprintf(str,"%d\t%c\t%d\t=\t%d\t%d - %d\r\n", firstshort, sign, secondshort,sum, z++,i);
 				fwrite(str, 1,strlen(str),fp);
-				}
+				}*/
 
 			
 
@@ -1043,4 +1047,130 @@ size2 = getSampleDataFromWaveFile(second_file_name, &second_data);
 		GlobalFree(result_double_data);
 		}
 	}
+}
+
+//returns length of sample data(amplitudes) filled in double dest_buffer
+//free dest_buffer after using the function
+ULONG getSamplesFromWaveFile(wchar_t* filename, double** dest_buffer)
+{
+int i = 0, k = 0;
+WAVE_HEADER hdr = {0};
+char* data = 0;
+double doubledatasize = 0, retrievedsize = 0;
+
+	if(hdr.inflatHeaderFromWaveFile(filename))
+		if(!strcmp(hdr.Format, "WAVE"))
+		{
+			if(hdr.SubChunk2Size > 0)
+			{
+			data = (char*)GlobalAlloc(GPTR, hdr.SubChunk2Size);
+				if(data)
+				{
+				//doubledatasize = hdr.SubChunk2Size / hdr.nChannels;
+					if(hdr.SubChunk2Size == getSampleDataFromWaveFile(filename, &data))
+					{
+						if(hdr.nChannels == 2)
+						{
+							switch (hdr.wBitsPerSample)
+							{
+								case 8:
+									for (i = 0; i < hdr.SubChunk2Size; i+=2)
+									{
+									*dest_buffer[k++] = ((double)data[i] + (double)data[i+1]) / 2;
+									}
+								break;
+
+								case 16:
+									for (i = 0; i < hdr.SubChunk2Size; i+=4)
+									{
+									*dest_buffer[k++] = (mylib__2_byte_to_short((char*)data + i) + mylib__2_byte_to_short((char*)data + i + 2)) / 2;
+									}
+								break;
+
+								default:
+								break;
+							}
+						}
+						else if(hdr.nChannels == 1)
+						{
+							switch (hdr.wBitsPerSample)
+							{
+								case 8:
+									for (i = 0; i < hdr.SubChunk2Size; i++)
+									{
+									*dest_buffer[k++] = (double)data[i];
+									}
+								break;
+
+								case 16:
+									for (i = 0; i < hdr.SubChunk2Size; i+=2)
+									{
+									*dest_buffer[k++] = mylib__2_byte_to_short((char*)data + i);
+									}
+								break;
+
+								default:
+								break;
+							}
+						}
+					}
+				GlobalFree(data);
+				}
+			}
+		}
+return k;
+}
+
+ULONG transformWaveFile(wchar_t *filename, double* realOut, double* imageOut)
+{
+#define FFT	1024
+
+WAVE_HEADER hdr = {0};
+int i = 0, k = 0, z= 0, counter = 0, datalength = 0, numofsample = 0;
+char *data = 0;
+double *doubledata = 0, doubledatalength = 0, real[FFT] = {0}, image[FFT] = {0};
+ULONG realandimgoutsize = 0;
+	if(hdr.inflatHeaderFromWaveFile(filename))
+	{
+		if(!strcmp(hdr.Format, "WAVE"))
+		{
+			if(hdr.SubChunk2Size)
+			{
+			data = (char*)GlobalAlloc(GPTR, hdr.SubChunk2Size);
+				if(data)
+				{
+				datalength = getSampleDataFromWaveFile(filename, &data);
+					if(hdr.SubChunk2Size == datalength)
+					{
+					doubledatalength = getSamplesFromWaveFile(filename, &doubledata);
+					realandimgoutsize = sizeof(double)*doubledatalength;
+					realOut = (double*)GlobalAlloc(GPTR, realandimgoutsize);
+					imageOut = (double*)GlobalAlloc(GPTR, realandimgoutsize);
+
+						if(realOut&&imageOut)
+						{
+							if(doubledatalength)
+							{
+								for (counter = 0; counter < doubledatalength / FFT; counter++)
+								{
+								k =  + counter*FFT;
+								fft_double(FFT,0,doubledata + k,NULL,real,image);
+									for (z = 0; z < FFT/2; z++)
+									{
+									realOut[k+z] = real[z];
+									imageOut[k+z] = image[z];
+
+									realOut[(realandimgoutsize/2)+(k+z)] = real[FFT/2+z];
+									imageOut[(realandimgoutsize/2)+(k+z)] = image[FFT/2+z];
+									}
+								}
+							}
+						}
+					}
+				GlobalFree(data);
+				}
+			}
+		}
+	}
+return realandimgoutsize;
 }
