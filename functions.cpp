@@ -206,7 +206,7 @@ MoveToEx(hDC, width/2, 0, NULL);
 
 SetTextColor(hDC, RGB(255, 255, 255));
 SetBkColor(hDC, RGB(0, 20, 0));
-wchar_t pos[10] = {0};
+wchar_t pos[100] = {0};
 //wsprintfW(pos,L"%d",centerX);
 //TextOutW(hDC,centerX,centerY,pos,10);
 //wsprintfW(pos,L"%d",centerX/2);
@@ -1055,62 +1055,72 @@ ULONG getSamplesFromWaveFile(wchar_t* filename, double** dest_buffer)
 {
 int i = 0, k = 0;
 WAVE_HEADER hdr = {0};
-char* data = 0;
+char* data = 0, buffer[1024] = {0};
 double doubledatasize = 0, retrievedsize = 0;
 
 	if(hdr.inflatHeaderFromWaveFile(filename))
-		if(!strcmp(hdr.Format, "WAVE"))
+	{
+		for (i = 0; i < 4; i++)
+		{
+		buffer[i] = hdr.Format[i];
+		}
+	buffer[i] = 0;
+		if(!strcmp(buffer, "WAVE"))
 		{
 			if(hdr.SubChunk2Size > 0)
 			{
 			data = (char*)GlobalAlloc(GPTR, hdr.SubChunk2Size);
 				if(data)
 				{
-				//doubledatasize = hdr.SubChunk2Size / hdr.nChannels;
+				doubledatasize = hdr.SubChunk2Size/hdr.nChannels/(hdr.wBitsPerSample/8);
 					if(hdr.SubChunk2Size == getSampleDataFromWaveFile(filename, &data))
 					{
-						if(hdr.nChannels == 2)
+					*dest_buffer = (double*)GlobalAlloc(GPTR, sizeof(double)*doubledatasize);
+						if(*dest_buffer)
 						{
-							switch (hdr.wBitsPerSample)
+							if(hdr.nChannels == 2)
 							{
-								case 8:
-									for (i = 0; i < hdr.SubChunk2Size; i+=2)
-									{
-									*dest_buffer[k++] = ((double)data[i] + (double)data[i+1]) / 2;
-									}
-								break;
+								switch (hdr.wBitsPerSample)
+								{
+									case 8:
+										for (i = 0; i < hdr.SubChunk2Size; i+=2)
+										{
+										(*dest_buffer)[k++] = ((double)data[i] + (double)data[i+1]) / 2;
+										}
+									break;
 
-								case 16:
-									for (i = 0; i < hdr.SubChunk2Size; i+=4)
-									{
-									*dest_buffer[k++] = (mylib__2_byte_to_short((char*)data + i) + mylib__2_byte_to_short((char*)data + i + 2)) / 2;
-									}
-								break;
+									case 16:
+										for (i = 0; i < hdr.SubChunk2Size; i+=4)
+										{
+										(*dest_buffer)[k++] = (mylib__2_byte_to_short((char*)data + i) + mylib__2_byte_to_short((char*)data + i + 2)) / 2;
+										}
+									break;
 
-								default:
-								break;
+									default:
+									break;
+								}
 							}
-						}
-						else if(hdr.nChannels == 1)
-						{
-							switch (hdr.wBitsPerSample)
+							else if(hdr.nChannels == 1)
 							{
-								case 8:
-									for (i = 0; i < hdr.SubChunk2Size; i++)
-									{
-									*dest_buffer[k++] = (double)data[i];
-									}
-								break;
+								switch (hdr.wBitsPerSample)
+								{
+									case 8:
+										for (i = 0; i < hdr.SubChunk2Size; i++)
+										{
+										(*dest_buffer)[k++] = (double)data[i];
+										}
+									break;
 
-								case 16:
-									for (i = 0; i < hdr.SubChunk2Size; i+=2)
-									{
-									*dest_buffer[k++] = mylib__2_byte_to_short((char*)data + i);
-									}
-								break;
+									case 16:
+										for (i = 0; i < hdr.SubChunk2Size; i+=2)
+										{
+										(*dest_buffer)[k++] = mylib__2_byte_to_short((char*)data + i);
+										}
+									break;
 
-								default:
-								break;
+									default:
+									break;
+								}
 							}
 						}
 					}
@@ -1118,21 +1128,29 @@ double doubledatasize = 0, retrievedsize = 0;
 				}
 			}
 		}
+	}
 return k;
 }
 
-ULONG transformWaveFile(wchar_t *filename, double* realOut, double* imageOut)
+//transforms wave file with fft and fills parameter buff pointer with imaginary and real complex numbers
+//returns filled imaginary and real data size
+ULONG transformWaveFile(wchar_t *filename, double** realOut, double** imageOut)
 {
-#define FFT	1024
+#define FFT	32768//1024
 
 WAVE_HEADER hdr = {0};
 int i = 0, k = 0, z= 0, counter = 0, datalength = 0, numofsample = 0;
-char *data = 0;
-double *doubledata = 0, doubledatalength = 0, real[FFT] = {0}, image[FFT] = {0};
-ULONG realandimgoutsize = 0;
+char *data = 0, buffer[1024] = {0};
+double *doubledata = 0, real[FFT] = {0}, image[FFT] = {0};
+ULONG  doubledatalength = 0;
 	if(hdr.inflatHeaderFromWaveFile(filename))
 	{
-		if(!strcmp(hdr.Format, "WAVE"))
+		for (i = 0; i < 4; i++)
+		{
+		buffer[i] = hdr.Format[i];
+		}
+	buffer[i] = 0;
+		if(!strcmp(buffer, "WAVE"))
 		{
 			if(hdr.SubChunk2Size)
 			{
@@ -1143,28 +1161,32 @@ ULONG realandimgoutsize = 0;
 					if(hdr.SubChunk2Size == datalength)
 					{
 					doubledatalength = getSamplesFromWaveFile(filename, &doubledata);
-					realandimgoutsize = sizeof(double)*doubledatalength;
-					realOut = (double*)GlobalAlloc(GPTR, realandimgoutsize);
-					imageOut = (double*)GlobalAlloc(GPTR, realandimgoutsize);
-
-						if(realOut&&imageOut)
+					
+						if(doubledata && doubledatalength)
 						{
-							if(doubledatalength)
-							{
-								for (counter = 0; counter < doubledatalength / FFT; counter++)
-								{
-								k =  + counter*FFT;
-								fft_double(FFT,0,doubledata + k,NULL,real,image);
-									for (z = 0; z < FFT/2; z++)
-									{
-									realOut[k+z] = real[z];
-									imageOut[k+z] = image[z];
+						*realOut = (double*)GlobalAlloc(GPTR,sizeof(double)* doubledatalength);
+						*imageOut = (double*)GlobalAlloc(GPTR,sizeof(double)* doubledatalength);
 
-									realOut[(realandimgoutsize/2)+(k+z)] = real[FFT/2+z];
-									imageOut[(realandimgoutsize/2)+(k+z)] = image[FFT/2+z];
+							if(*realOut&&*imageOut)
+							{
+								if(doubledatalength)
+								{
+									for (counter = 0; counter < doubledatalength / FFT; counter++)
+									{
+									k = counter*FFT;
+									fft_double(FFT,0,doubledata + k,NULL,real,image);
+										for (z = 0; z < FFT/2; z++)
+										{
+										(*realOut)[k/2+z] = real[z];
+										(*imageOut)[k/2+z] = image[z];
+
+										/*(*realOut)[(doubledatalength/2)+(k/2+z)] = real[FFT/2+z+k/2];
+										(*imageOut)[(doubledatalength/2)+(k/2+z)] = image[FFT/2+z+k/2];*/
+										}
 									}
 								}
 							}
+						GlobalFree(doubledata);
 						}
 					}
 				GlobalFree(data);
@@ -1172,5 +1194,5 @@ ULONG realandimgoutsize = 0;
 			}
 		}
 	}
-return realandimgoutsize;
+return doubledatalength;
 }
