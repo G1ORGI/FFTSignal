@@ -137,7 +137,7 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 										//printf("data is coverted to double buffer.\n");
 										
 										signal = new complex[doublesize];
-										//CFourier fft;
+										//CFourier FFT_SIZE;
 									
 										for ( i = 0; i < doublesize; i++)
 										{
@@ -151,7 +151,7 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				
 											if(imaginaryBuffer)
 											{
-											//printf("start forward FFT transform...\n");
+											//printf("start forward FFT_SIZE transform...\n");
 											//runTransformData(signal, doublesize);
 
 											CFFT::Forward(signal, doublesize);
@@ -167,8 +167,8 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 											//---------------------------------------------------------------------------
 
 
-											//FFT(1, powof2,doublebuffer,imaginaryBuffer);
-											//printf("Forward FFT transform ended.\n");
+											//FFT_SIZE(1, powof2,doublebuffer,imaginaryBuffer);
+											//printf("Forward FFT_SIZE transform ended.\n");
 
 
 												//printf("start parsing data...\n");
@@ -221,7 +221,7 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 								{
 								fileisplaying = 1;
 
-								int i = 0;
+								int i = 0, k = 0;
 								double *real = 0, *img = 0, imgandrealsize = 0;
 								imgandrealsize = transformWaveFile(outputfilename,&real,&img);
 								pglobalBuffer = GlobalAlloc(GPTR,sizeof(double)*imgandrealsize);
@@ -230,20 +230,20 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 										if(real&&img&&imgandrealsize)
 										{
 										float re, im;
-											for (i = 0; i < imgandrealsize / 2; i += 1)
+											for (i = 0; i < FFT_SIZE/2 ; i += 1)
 											{
-												re = real[i];
-												im = img[i];
+											re = real[i];
+											im = img[i];
 
-												((double*)pglobalBuffer)[i] = (GetFrequencyIntensity(re, im)) / 1000;
+											((double*)pglobalBuffer)[i] = (GetFrequencyIntensity(re, im))/1000;
 											}
 
-										buffer_size = imgandrealsize / 2;//k;
+										buffer_size = FFT_SIZE/2;//k;
 										InvalidateRect(hwnd_main, 0, 1);
 
 										int imax = ((double*)pglobalBuffer)[0], maxi = 0;
 
-											for (i = 0; i < imgandrealsize/2; i++)
+											for (i = 0; i < FFT_SIZE/2; i++)
 											{
 												if (imax < ((double*)pglobalBuffer)[i])
 												{
@@ -252,191 +252,13 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 												}
 											}
 
-										float freq = maxi * 44100 / FFT;
+										float freq = maxi * 44100 / FFT_SIZE;
 										maxfreq = freq;
 
 										indexofmaxfreq = maxi;
 
 										}
 									}
-								
-
-								//fileisplaying = 1;
-								//#define FFT 65536//16384//32768//65536
-								//QWORD recieved_size = 0;
-								//memcpy(info.url_w, outputfilename, sizeof(outputfilename));
-								//recieved_size = getAudioFileData(&info);
-								//	if(pglobalBuffer)
-								//	GlobalFree(pglobalBuffer);
-								//	pglobalBuffer = GlobalAlloc(GPTR,sizeof(double)*(recieved_size / (info.tech_info.BitsPerSample/8)));
-								//	if(pglobalBuffer)
-								//	{
-								//		if (info.tech_info.BitsPerSample == 16)
-								//		{
-								//			int i = 0, k = 0, j = 0;
-								//			for (i = 0; i < recieved_size - 4; i += 4)
-								//			{
-								//				((double*)pglobalBuffer)[k++] = (mylib__2_byte_to_short((char*)info.data + i) + mylib__2_byte_to_short((char*)info.data + i + 2)) / 2;
-								//			}
-
-								//			/*doublebuffer = (double*)GlobalAlloc(GPTR, sizeof(double) * FFT);
-								//			imaginaryBuffer = (double*)GlobalAlloc(GPTR, sizeof(double) * FFT);
-
-								////			if(FFT >= k+1)
-								////			for (int i = 0; i < k+1; i++)
-								////			{
-								////			doublebuffer[i] = ((double*)pglobalBuffer)[i];
-								////			}
-								////			else
-								////			for (int i = 0; i < FFT; i++)
-								////			{
-								////			doublebuffer[i] = ((double*)pglobalBuffer)[i];
-								////			}*/
-
-								//			/*if(doublebuffer && imaginaryBuffer)
-								//			fft_double(FFT,0,(double*)pglobalBuffer,NULL,doublebuffer,imaginaryBuffer);
-
-
-								//			double re,im;
-								//			for(int i=0;i<FFT/2;i+=1)
-								//			{
-								//			re = doublebuffer[i];
-								//			im = imaginaryBuffer[i];
-
-								//			((double*)pglobalBuffer)[i]=(GetFrequencyIntensity(re,im))/6000;
-								//			}*/
-
-								//			/*int imax = ((double*)pglobalBuffer)[0], maxi = 0;
-
-								//			for (size_t i = 0; i < FFT/2; i++)
-								//			{
-								//			if (imax < ((double*)pglobalBuffer)[i])
-								//			{
-								//			imax = ((double*)pglobalBuffer)[i];
-								//			maxi = i;
-								//			}
-								//			}
-
-								//			float freq = maxi * 44100 / FFT;
-								//			maxfreq = freq;
-
-								//			indexofmaxfreq = maxi;*/
-
-								//			/*for (size_t i = maxi - 25; i < maxi+25; i++)
-								//			{
-								//			doublebuffer[i] = 0;
-								//			imaginaryBuffer[i] = 0;
-								//			}*/
-
-								//			/*fft_double(FFT, 1, doublebuffer, NULL, doublebuffer, imaginaryBuffer);
-
-								//			void* buffer = GlobalAlloc(GPTR, sizeof(short) * 44100);
-
-								//			for (int i = 0; i < 44100; i++)
-								//			{
-								//			((short*)buffer)[i] = (short)doublebuffer[i];
-								//			}
-								//			WAVE_HEADER h = { 0 };
-								//			createFullWaveFile(L"C:\\Users\\Gio\\Desktop\\reversed.wav", 44100, 1, 16, &h, buffer, 44100 * 2);*/
-
-								//			signal = new complex[FFT];
-								//			memset(signal, 0, sizeof(complex) * FFT);
-
-								//			if (FFT >= k + 1)
-								//				for (int i = 0; i < k + 1; i++)
-								//				{
-								//				//signal[i] = complex(cos(2 * PI*i / 512.0), 0);
-								//				//signal[i] = complex(-sin(2 * PI*i / 512.0), 0);
-								//					signal[i] = complex(((double*)pglobalBuffer)[i], 0);
-								//				}
-								//			else
-								//				for (int i = 0; i < FFT; i++)
-								//				{
-								//				//signal[i] = complex(cos(2 * PI*i / 512.0), 0);
-								//				//signal[i] = complex(-sin(2 * PI*i / 512.0), 0);
-								//					signal[i] = complex(((double*)pglobalBuffer)[i], 0);
-								//				}
-
-
-								//			CFFT::Forward(signal, FFT);
-
-								//			float re, im;
-								//			for (int i = 0; i < FFT / 2; i += 1)
-								//			{
-								//				re = signal[i].m_re;
-								//				im = signal[i].m_im;
-
-								//				((double*)pglobalBuffer)[i] = (GetFrequencyIntensity(re, im)) / 6000;
-								//			}
-
-								//			buffer_size = FFT / 2;//k;
-								//			InvalidateRect(hwnd_main, 0, 1);
-
-								//			int imax = ((double*)pglobalBuffer)[0], maxi = 0;
-
-								//			for (size_t i = 0; i < FFT/2; i++)
-								//			{
-								//				if (imax < ((double*)pglobalBuffer)[i])
-								//				{
-								//				imax = ((double*)pglobalBuffer)[i];
-								//				maxi = i;
-								//				}
-								//			}
-
-								//			float freq = maxi * 44100 / FFT;
-								//			maxfreq = freq;
-
-								//			indexofmaxfreq = maxi;
-
-
-								//			//for (size_t i = maxi - 25; i < maxi+25; i++)
-								//			/*for (size_t i =0; i < FFT; i++)
-								//			{
-								//				signal[i].m_re = 0;
-								//				signal[i].m_im = 0;
-
-								//				((double*)pglobalBuffer)[i] = 0;
-								//			}*/
-
-								//			//insert manual values in fft buffer
-								//			/*for (size_t i = 0; i < 44100; i+=20)
-								//			{
-								//			signal[i].m_re = 13000;
-								//			signal[i].m_im = 13000;
-								//			}*/
-
-								//			//reverse transform
-								//			CFFT::Inverse(signal, FFT);
-								//			void* buffer = GlobalAlloc(GPTR, sizeof(short) * 44100);
-
-
-								//			if (buffer)
-								//			{
-								//				//insert manual values in wave buffer
-								//				/*for (size_t i = 0; i < 44100; i += 4)
-								//				{
-								//					((short*)buffer)[i] = 7000;
-								//					((short*)buffer)[i + 1] = 13000;
-								//					((short*)buffer)[i + 2] = -7000;
-								//					((short*)buffer)[i + 3] = -13000;
-								//				}*/
-								//				//insert signal data
-								//				for (int i = 0; i < 44100; i++)
-								//				{
-								//				((short*)buffer)[i] = (short)signal[i].m_re;
-								//				}
-								//			WAVE_HEADER h = { 0 };
-								//			createFullWaveFile(L"C:\\Users\\Gio\\Desktop\\reversed.wav", 44100, 1, 16, &h, buffer, 44100 * 2);
-								//			}
-								//		delete signal;
-
-								//			/*if(doublebuffer)
-								//			GlobalFree(doublebuffer);
-								//			if(imaginaryBuffer)
-								//			GlobalFree(imaginaryBuffer);*/
-								//		}
-								//	}
-
 								}
 								break;
 

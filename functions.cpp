@@ -616,9 +616,9 @@ return status;
 //				
 //				if(imaginaryBuffer)
 //				{
-//				//printf("start forward FFT transform...\n");
-//				FFT(1, powof2,doublebuffer,imaginaryBuffer);
-//				//printf("Forward FFT transform ended.\n");
+//				//printf("start forward FFT_SIZE transform...\n");
+//				FFT_SIZE(1, powof2,doublebuffer,imaginaryBuffer);
+//				//printf("Forward FFT_SIZE transform ended.\n");
 //
 //				//remax = remin = doublebuffer[0];
 //				//immax = immin = imaginaryBuffer[0];
@@ -669,9 +669,9 @@ return status;
 //
 //				wsprintfW(resultfilename, L"C:\\Users\\Gio\\Desktop\\result-%d.wav", start);
 //
-//				//printf("start reverse FFT transform...\n");
-//				//FFT(-1, powof2,doublebuffer,imaginaryBuffer);
-//				//printf("Reverse FFT transform ended.\n");
+//				//printf("start reverse FFT_SIZE transform...\n");
+//				//FFT_SIZE(-1, powof2,doublebuffer,imaginaryBuffer);
+//				//printf("Reverse FFT_SIZE transform ended.\n");
 //
 //				//GlobalFree(imaginaryBuffer);
 //				}
@@ -1132,16 +1132,15 @@ double doubledatasize = 0, retrievedsize = 0;
 return k;
 }
 
-//transforms wave file with fft and fills parameter buff pointer with imaginary and real complex numbers
+//transforms wave file with FFT_SIZE and fills parameter buff pointer with imaginary and real complex numbers
 //returns filled imaginary and real data size
 ULONG transformWaveFile(wchar_t *filename, double** realOut, double** imageOut)
 {
-#define FFT	32768//1024
 
 WAVE_HEADER hdr = {0};
 int i = 0, k = 0, z= 0, counter = 0, datalength = 0, numofsample = 0;
 char *data = 0, buffer[1024] = {0};
-double *doubledata = 0, real[FFT] = {0}, image[FFT] = {0};
+double *doubledata = 0, real[FFT_SIZE] = {0}, image[FFT_SIZE] = {0};
 ULONG  doubledatalength = 0;
 	if(hdr.inflatHeaderFromWaveFile(filename))
 	{
@@ -1169,20 +1168,17 @@ ULONG  doubledatalength = 0;
 
 							if(*realOut&&*imageOut)
 							{
-								if(doubledatalength)
+								for (counter = 0; counter < doubledatalength / FFT_SIZE; counter++)
 								{
-									for (counter = 0; counter < doubledatalength / FFT; counter++)
+								k = counter*FFT_SIZE;
+								fft_double(FFT_SIZE,0,doubledata + k,NULL,real,image);
+									for (z = 0; z < FFT_SIZE/2; z++)
 									{
-									k = counter*FFT;
-									fft_double(FFT,0,doubledata + k,NULL,real,image);
-										for (z = 0; z < FFT/2; z++)
-										{
-										(*realOut)[k/2+z] = real[z];
-										(*imageOut)[k/2+z] = image[z];
+									(*realOut)[k/2+z] = real[z];
+									(*imageOut)[k/2+z] = image[z];
 
-										/*(*realOut)[(doubledatalength/2)+(k/2+z)] = real[FFT/2+z+k/2];
-										(*imageOut)[(doubledatalength/2)+(k/2+z)] = image[FFT/2+z+k/2];*/
-										}
+									(*realOut)[(FFT_SIZE/2)+(k/2+z)] = real[(FFT_SIZE/2)+z];
+									(*imageOut)[(FFT_SIZE/2)+(k/2+z)] = image[(FFT_SIZE/2)+z];
 									}
 								}
 							}
