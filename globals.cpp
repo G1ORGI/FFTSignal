@@ -39,8 +39,9 @@ void *pglobalBuffer = 0;
 #define FFT_T			1
 #define DEF_T			2
 #define DRAW_FULL_FFT	3
+#define TEST			4
 
-int t_type = DRAW_FULL_FFT, fileisplaying = 0;
+int t_type = TEST, fileisplaying = 0;
 
 #define LINE_MODE	1
 #define POINT_MODE	2

@@ -225,39 +225,90 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 								double *real = 0, *img = 0, numofcomplex = 0;
 								numofcomplex = transformWaveFile(outputfilename,&real,&img);
 								pglobalBuffer = GlobalAlloc(GPTR,sizeof(double)*numofcomplex);
-									if(pglobalBuffer)
+									if(pglobalBuffer && real && img && numofcomplex)
 									{
-										if(real&&img&&numofcomplex)
+									float re, im;
+										for (i = 0; i < numofcomplex/2 ; i += 1)
 										{
-										float re, im;
-											for (i = 0; i < numofcomplex/2 ; i += 1)
-											{
-											re = real[i];
-											im = img[i];
+										re = real[i];
+										im = img[i];
 
-											((double*)pglobalBuffer)[i] = (GetFrequencyIntensity(re, im))/1000;
+										((double*)pglobalBuffer)[i] = (GetFrequencyIntensity(re, im))/1000;
+										}
+
+									GlobalFree(real);
+									GlobalFree(img);
+
+									buffer_size = numofcomplex/2;//k;
+									InvalidateRect(hwnd_main, 0, 1);
+
+									int imax = ((double*)pglobalBuffer)[0], maxi = 0;
+
+										for (i = 0; i < numofcomplex/2; i++)
+										{
+											if (imax < ((double*)pglobalBuffer)[i])
+											{
+											imax = ((double*)pglobalBuffer)[i];
+											maxi = i;
+											}
+										}
+
+									//float freq = 1 * 297 * 44100 / FFT_SIZE; 
+									float freq = maxi * 44100 / FFT_SIZE;
+									maxfreq = freq;
+
+									indexofmaxfreq = maxi;
+									}
+								}
+								break;
+
+								case TEST:
+								{
+
+								int i  = 0;
+								
+								double *real1 = 0, *img1 = 0, numofcomplex1 = 0, *real2 = 0, *img2 = 0, numofcomplex2 = 0, *real3 = 0, *img3 = 0, *dresult = 0, *imgresult = 0;
+								numofcomplex1 = transformWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\3.wav",&real1,&img1);
+								numofcomplex2 = transformWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\700.wav",&real2,&img2);
+
+									if(real1 && img1 && numofcomplex1 && real2 && img2 && numofcomplex2)
+									{
+									real3 = (double*)GlobalAlloc(GPTR, sizeof(double)* numofcomplex1);
+									img3 = (double*)GlobalAlloc(GPTR, sizeof(double)* numofcomplex1);
+									dresult = (double*)GlobalAlloc(GPTR, sizeof(double)* numofcomplex1);
+									imgresult = (double*)GlobalAlloc(GPTR, sizeof(double)* numofcomplex1);
+										if(real3 && img3 && dresult && imgresult)
+										{
+											for (i = 0; i < numofcomplex2; i++)
+											{
+											real3[i] = real1[i] - real2[i];
+											img3[i] = img1[i] - img2[i];
 											}
 
-										buffer_size = numofcomplex/2;//k;
-										InvalidateRect(hwnd_main, 0, 1);
+										fft_double(FFT_SIZE,1,real3,img3,dresult,imgresult);
 
-										int imax = ((double*)pglobalBuffer)[0], maxi = 0;
+										GlobalFree(real1);
+										GlobalFree(img1);
+										GlobalFree(real2);
+										GlobalFree(img2);
+										GlobalFree(real3);
+										GlobalFree(img3);
+										GlobalFree(imgresult);
 
-											for (i = 0; i < numofcomplex/2; i++)
+										void *waveBuffer = GlobalAlloc(GPTR, sizeof(short) * FFT_SIZE);
+											if(waveBuffer)
 											{
-												if (imax < ((double*)pglobalBuffer)[i])
+												for (int i = 0; i < FFT_SIZE; i++)
 												{
-												imax = ((double*)pglobalBuffer)[i];
-												maxi = i;
+												((short*)waveBuffer)[i] = dresult[i];
 												}
+											WAVE_HEADER h = { 0 };
+											createFullWaveFile(L"C:\\Users\\Gio\\Desktop\\result.wav", 44100, 1, 16, &h, waveBuffer, FFT_SIZE * 2);
+
+											GlobalFree(waveBuffer);
 											}
 
-										//float freq = 1 * 297 * 44100 / FFT_SIZE; 
-										float freq = maxi * 44100 / FFT_SIZE;
-										maxfreq = freq;
-
-										indexofmaxfreq = maxi;
-
+										GlobalFree(dresult);
 										}
 									}
 								}

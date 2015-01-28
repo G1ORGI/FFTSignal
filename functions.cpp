@@ -923,7 +923,8 @@ MMRESULT	err;
 	}
 }
 
-merges two file signals
+//merges two file signals
+//OPERATION: 1 = +, 2 = -, 3 = *, 4 = /;
 void plusSignals(wchar_t* first_file_name, wchar_t* second_file_name, wchar_t* result_file_path, DWORD OPERATION)
 {
 DWORD size1 = 0, size2 = 0, size3 = 0, minsize=0, i = 0, z = 0;

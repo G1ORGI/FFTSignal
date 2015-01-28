@@ -1,6 +1,6 @@
 #pragma warning( disable : 4996)
 #define LOG_ON		1
-#define FFT_SIZE	1024//32768//1024
+#define FFT_SIZE	32768//32768//1024
 //build 020_001_58
 
 #include <stdio.h>
@@ -36,7 +36,7 @@ const wchar_t szClassName[] = L"FFT Signal";
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 { 
 
-//plusSignals(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\3.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\2.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\4.wav", 2);
+plusSignals(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\440.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\700.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\3.wav", 1);
 InitCommonControls();
 
     WNDCLASSEXW wc;
