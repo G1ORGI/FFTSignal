@@ -222,15 +222,15 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 								fileisplaying = 1;
 
 								int i = 0, k = 0;
-								double *real = 0, *img = 0, imgandrealsize = 0;
-								imgandrealsize = transformWaveFile(outputfilename,&real,&img);
-								pglobalBuffer = GlobalAlloc(GPTR,sizeof(double)*imgandrealsize);
+								double *real = 0, *img = 0, numofcomplex = 0;
+								numofcomplex = transformWaveFile(outputfilename,&real,&img);
+								pglobalBuffer = GlobalAlloc(GPTR,sizeof(double)*numofcomplex);
 									if(pglobalBuffer)
 									{
-										if(real&&img&&imgandrealsize)
+										if(real&&img&&numofcomplex)
 										{
 										float re, im;
-											for (i = 0; i < FFT_SIZE/2 ; i += 1)
+											for (i = 0; i < numofcomplex/2 ; i += 1)
 											{
 											re = real[i];
 											im = img[i];
@@ -238,12 +238,12 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 											((double*)pglobalBuffer)[i] = (GetFrequencyIntensity(re, im))/1000;
 											}
 
-										buffer_size = FFT_SIZE/2;//k;
+										buffer_size = numofcomplex/2;//k;
 										InvalidateRect(hwnd_main, 0, 1);
 
 										int imax = ((double*)pglobalBuffer)[0], maxi = 0;
 
-											for (i = 0; i < FFT_SIZE/2; i++)
+											for (i = 0; i < numofcomplex/2; i++)
 											{
 												if (imax < ((double*)pglobalBuffer)[i])
 												{
@@ -252,6 +252,7 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 												}
 											}
 
+										//float freq = 1 * 297 * 44100 / FFT_SIZE; 
 										float freq = maxi * 44100 / FFT_SIZE;
 										maxfreq = freq;
 

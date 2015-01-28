@@ -1138,7 +1138,7 @@ ULONG transformWaveFile(wchar_t *filename, double** realOut, double** imageOut)
 {
 
 WAVE_HEADER hdr = {0};
-int i = 0, k = 0, z= 0, counter = 0, datalength = 0, numofsample = 0;
+int i = 0, k = 0, z= 0, counter = 0, datalength = 0, numofcomplex = 0;
 char *data = 0, buffer[1024] = {0};
 double *doubledata = 0, real[FFT_SIZE] = {0}, image[FFT_SIZE] = {0};
 ULONG  doubledatalength = 0;
@@ -1179,6 +1179,8 @@ ULONG  doubledatalength = 0;
 
 									(*realOut)[(FFT_SIZE/2)+(k/2+z)] = real[(FFT_SIZE/2)+z];
 									(*imageOut)[(FFT_SIZE/2)+(k/2+z)] = image[(FFT_SIZE/2)+z];
+
+									numofcomplex += 2;
 									}
 								}
 							}
@@ -1190,5 +1192,5 @@ ULONG  doubledatalength = 0;
 			}
 		}
 	}
-return doubledatalength;
+return numofcomplex;
 }

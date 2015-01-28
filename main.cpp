@@ -1,6 +1,6 @@
 #pragma warning( disable : 4996)
 #define LOG_ON		1
-#define FFT_SIZE	32768//32768//1024
+#define FFT_SIZE	1024//32768//1024
 //build 020_001_58
 
 #include <stdio.h>
