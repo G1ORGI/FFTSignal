@@ -35,8 +35,6 @@ const wchar_t szClassName[] = L"FFT Signal";
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 { 
-
-plusSignals(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\440.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\700.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\3.wav", 1);
 InitCommonControls();
 
     WNDCLASSEXW wc;

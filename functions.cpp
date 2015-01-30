@@ -925,7 +925,9 @@ MMRESULT	err;
 
 //merges two file signals
 //OPERATION: 1 = +, 2 = -, 3 = *, 4 = /;
-void plusSignals(wchar_t* first_file_name, wchar_t* second_file_name, wchar_t* result_file_path, DWORD OPERATION)
+//if writein_Outbuffer is true than you should pass double-buffer pointer in third parameter and fills samples in mono mode. after use this function free double-buffer
+//else if writein_Outbuffer is false than you should pass (wchar_t*)file path pointer in third parameter 
+ULONG plusSignals(wchar_t* first_file_name, wchar_t* second_file_name, void* result_file_path_or_pdbuffer, DWORD OPERATION, BOOL writein_Outbuffer)
 {
 DWORD size1 = 0, size2 = 0, size3 = 0, minsize=0, i = 0, z = 0;
 
@@ -970,6 +972,9 @@ size2 = getSampleDataFromWaveFile(second_file_name, &second_data);
 			sum = 0;*/
 		wsprintfW(logname, L"Log_%d.txt", OPERATION);
 		FILE *fp;
+
+			if(writein_Outbuffer)
+			result_file_path_or_pdbuffer = GlobalAlloc(GPTR, sizeof(double) * minsize);
    
 		fp = _wfopen(logname, L"wb");
 		if (fp )
@@ -1008,20 +1013,26 @@ size2 = getSampleDataFromWaveFile(second_file_name, &second_data);
 					default:
 					break;
 				}
+
+					if(writein_Outbuffer)
+						if(result_file_path_or_pdbuffer)
+						{
+						((double*)result_file_path_or_pdbuffer)[z++] = sum;
+						}
 					
-				/*if(sum > 32767)
+				if(sum > 32767)
 				{
 				sum = 32767;
-				sprintf(str,"%d\t%c\t%d\t=\t%d\t%d - %d\r\n", firstshort, sign, secondshort,sum, z++,i);
-				fwrite(str, 1,strlen(str),fp);
+				/*sprintf(str,"%d\t%c\t%d\t=\t%d\t%d - %d\r\n", firstshort, sign, secondshort,sum, z++,i);
+				fwrite(str, 1,strlen(str),fp);*/
 				}
 				if(sum < 32768*(-1))
 				{
 				sum = 32768*(-1);
 
-				sprintf(str,"%d\t%c\t%d\t=\t%d\t%d - %d\r\n", firstshort, sign, secondshort,sum, z++,i);
-				fwrite(str, 1,strlen(str),fp);
-				}*/
+				/*sprintf(str,"%d\t%c\t%d\t=\t%d\t%d - %d\r\n", firstshort, sign, secondshort,sum, z++,i);
+				fwrite(str, 1,strlen(str),fp);*/
+				}
 
 			
 
@@ -1037,18 +1048,22 @@ size2 = getSampleDataFromWaveFile(second_file_name, &second_data);
 				//status = 0;
 				}
 
-		WAVE_HEADER hdr = {0};
-		createFullWaveFile(result_file_path, 44100, 2, 16, &hdr, result_data, size3);
+				if(!writein_Outbuffer)
+				{
+				WAVE_HEADER hdr = {0};
+				createFullWaveFile((wchar_t*)result_file_path_or_pdbuffer, 44100, 2, 16, &hdr, result_data, size3);
+				}
 
-		GlobalFree(first_data);
-		GlobalFree(second_data);
-		GlobalFree(result_data);
+			GlobalFree(first_data);
+			GlobalFree(second_data);
+			GlobalFree(result_data);
 
-		GlobalFree(first_double_data);
-		GlobalFree(second_double_data);
-		GlobalFree(result_double_data);
+			GlobalFree(first_double_data);
+			GlobalFree(second_double_data);
+			GlobalFree(result_double_data);
 		}
 	}
+return z;
 }
 
 //returns length of sample data(amplitudes) filled in double dest_buffer

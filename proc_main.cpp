@@ -264,19 +264,39 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 								case TEST:
 								{
-
-								int i  = 0;
-								
 								double *real1 = 0, *img1 = 0, numofcomplex1 = 0, *real2 = 0, *img2 = 0, numofcomplex2 = 0, *real3 = 0, *img3 = 0, *dresult = 0, *imgresult = 0;
-								numofcomplex1 = transformWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\3.wav",&real1,&img1);
+								int i  = 0;
+								double* firstfilebuffer = 0, *onefilebuff =0, *secondfilebuff = 0, l1 = 0, l2 = 0;
+								//plusSignals(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\440.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\700.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\3.wav", 1,0);
+								//ULONG sizeoffirstdata = plusSignals(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\440.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\700.wav", firstfilebuffer, 1,1);
+								l1 = getSamplesFromWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\440.wav", &onefilebuff);
+								l2 = getSamplesFromWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\700.wav", &secondfilebuff);
+								firstfilebuffer = (double*)GlobalAlloc(GPTR, sizeof(double)* l2);
+								real1 = (double*)GlobalAlloc(GPTR, sizeof(double)* FFT_SIZE);
+								img1 = (double*)GlobalAlloc(GPTR, sizeof(double)* FFT_SIZE);
+									if(l1&&l2)
+									{
+										for (i = 0; i < FFT_SIZE; i++)
+										{
+										firstfilebuffer[i] = onefilebuff[i] + secondfilebuff[i];
+										}
+
+										if(firstfilebuffer)
+										{
+										fft_double(FFT_SIZE,0,firstfilebuffer,NULL,real1,img1);
+										GlobalFree(firstfilebuffer);
+										}
+									}
+
+								//numofcomplex1 = transformWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\3.wav",&real1,&img1);
 								numofcomplex2 = transformWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\700.wav",&real2,&img2);
 
-									if(real1 && img1 && numofcomplex1 && real2 && img2 && numofcomplex2)
+									if(real1 && img1 /*&& numofcomplex1*/ && real2 && img2 && numofcomplex2)
 									{
-									real3 = (double*)GlobalAlloc(GPTR, sizeof(double)* numofcomplex1);
-									img3 = (double*)GlobalAlloc(GPTR, sizeof(double)* numofcomplex1);
-									dresult = (double*)GlobalAlloc(GPTR, sizeof(double)* numofcomplex1);
-									imgresult = (double*)GlobalAlloc(GPTR, sizeof(double)* numofcomplex1);
+									real3 = (double*)GlobalAlloc(GPTR, sizeof(double)* FFT_SIZE);
+									img3 = (double*)GlobalAlloc(GPTR, sizeof(double)* FFT_SIZE);
+									dresult = (double*)GlobalAlloc(GPTR, sizeof(double)* FFT_SIZE);
+									imgresult = (double*)GlobalAlloc(GPTR, sizeof(double)* FFT_SIZE);
 										if(real3 && img3 && dresult && imgresult)
 										{
 											for (i = 0; i < numofcomplex2; i++)
