@@ -80,6 +80,8 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 						//printf("choose file...\n");
 						if(mylib_fileOpenDialog(0,outputfilename))
 						{
+						t_type = DRAW_BY_CENTER;
+						
 							switch (t_type)
 							{
 								case FFT_T:
@@ -222,9 +224,12 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 								fileisplaying = 1;
 
 								int i = 0, k = 0;
-								double *real = 0, *img = 0, numofcomplex = 0;
+								double *real = 0, *img = 0, numofcomplex = 0, *rreal = 0, *rimg = 0;
 								numofcomplex = transformWaveFile(outputfilename,&real,&img);
 								pglobalBuffer = GlobalAlloc(GPTR,sizeof(double)*numofcomplex);
+
+								rreal = (double*)GlobalAlloc(GPTR,sizeof(double)*numofcomplex);
+								rimg = (double*)GlobalAlloc(GPTR,sizeof(double)*numofcomplex);
 									if(pglobalBuffer && real && img && numofcomplex)
 									{
 									float re, im;
@@ -233,14 +238,10 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 										re = real[i];
 										im = img[i];
 
-										((double*)pglobalBuffer)[i] = (GetFrequencyIntensity(re, im))/1000;
+										((double*)pglobalBuffer)[i] = (GetFrequencyIntensity(re, im))/500;
 										}
 
-									GlobalFree(real);
-									GlobalFree(img);
-
-									buffer_size = numofcomplex/2;//k;
-									InvalidateRect(hwnd_main, 0, 1);
+									
 
 									int imax = ((double*)pglobalBuffer)[0], maxi = 0;
 
@@ -253,11 +254,49 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 											}
 										}
 
-									//float freq = 1 * 297 * 44100 / FFT_SIZE; 
 									float freq = maxi * 44100 / FFT_SIZE;
 									maxfreq = freq;
 
 									indexofmaxfreq = maxi;
+
+										//null some samples and restore data
+										/*for (i = 0; i < maxi + 150; i++)
+										{
+										real[i] = 0;
+										img[i] = 0;
+										((double*)pglobalBuffer)[i] = 0;
+										}
+
+										for (i = maxi + 150 + 150; i < maxi + 150 +150 + 400; i++)
+										{
+										real[i] = 0;
+										img[i] = 0;
+										((double*)pglobalBuffer)[i] = 0;
+										}
+
+										if(rreal&&rimg)
+										{
+										fft_double(FFT_SIZE,1,real,img,rreal,rimg);
+
+										void *waveBuffer = GlobalAlloc(GPTR, sizeof(short) * FFT_SIZE);
+											if(waveBuffer)
+											{
+												for (int i = 0; i < FFT_SIZE; i++)
+												{
+												((short*)waveBuffer)[i] = rreal[i];
+												}
+											WAVE_HEADER h = { 0 };
+											createFullWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\restored.wav", 44100, 1, 16, &h, waveBuffer, FFT_SIZE * 2);
+
+											GlobalFree(waveBuffer);
+											}
+										}*/
+
+									GlobalFree(real);
+									GlobalFree(img);
+
+									buffer_size = numofcomplex/2;//k;
+									InvalidateRect(hwnd_main, 0, 1);
 									}
 								}
 								break;
@@ -269,8 +308,8 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 								double* firstfilebuffer = 0, *onefilebuff =0, *secondfilebuff = 0, l1 = 0, l2 = 0;
 								//plusSignals(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\440.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\700.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\3.wav", 1,0);
 								//ULONG sizeoffirstdata = plusSignals(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\440.wav", L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\700.wav", firstfilebuffer, 1,1);
-								l1 = getSamplesFromWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\440.wav", &onefilebuff);
-								l2 = getSamplesFromWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\700.wav", &secondfilebuff);
+								l1 = getSamplesFromWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\smus.wav", &onefilebuff);
+								l2 = getSamplesFromWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\sxm.wav", &secondfilebuff);
 								firstfilebuffer = (double*)GlobalAlloc(GPTR, sizeof(double)* l2);
 								real1 = (double*)GlobalAlloc(GPTR, sizeof(double)* FFT_SIZE);
 								img1 = (double*)GlobalAlloc(GPTR, sizeof(double)* FFT_SIZE);
@@ -289,7 +328,7 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 									}
 
 								//numofcomplex1 = transformWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\3.wav",&real1,&img1);
-								numofcomplex2 = transformWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\700.wav",&real2,&img2);
+								numofcomplex2 = transformWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\smus.wav",&real2,&img2);
 
 									if(real1 && img1 /*&& numofcomplex1*/ && real2 && img2 && numofcomplex2)
 									{
@@ -323,13 +362,57 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 												((short*)waveBuffer)[i] = dresult[i];
 												}
 											WAVE_HEADER h = { 0 };
-											createFullWaveFile(L"C:\\Users\\Gio\\Desktop\\result.wav", 44100, 1, 16, &h, waveBuffer, FFT_SIZE * 2);
+											createFullWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\result.wav", 44100, 1, 16, &h, waveBuffer, FFT_SIZE * 2);
 
 											GlobalFree(waveBuffer);
 											}
 
 										GlobalFree(dresult);
 										}
+									}
+								}
+								break;
+
+								case DRAW_BY_CENTER:
+								{
+								fileisplaying = 1;
+								scale = 9000;
+
+								int i = 0, k = 0;
+								double *real = 0, *img = 0, numofcomplex = 0;
+								numofcomplex = transformWaveFile(outputfilename,&real,&img);
+								pReal = GlobalAlloc(GPTR,sizeof(double)*numofcomplex);
+								pImg = GlobalAlloc(GPTR,sizeof(double)*numofcomplex);
+
+									if(pReal && pImg && real && img && numofcomplex)
+									{
+										for (i = 0; i < numofcomplex/2 ; i += 1)
+										{
+										((double*)pReal)[i] = real[i];
+										((double*)pImg)[i] = img[i];
+										}
+
+									/*int imax = ((double*)pglobalBuffer)[0], maxi = 0;
+
+										for (i = 0; i < numofcomplex/2; i++)
+										{
+											if (imax < ((double*)pglobalBuffer)[i])
+											{
+											imax = ((double*)pglobalBuffer)[i];
+											maxi = i;
+											}
+										}
+
+									float freq = maxi * 44100 / FFT_SIZE;
+									maxfreq = freq;
+
+									indexofmaxfreq = maxi;*/
+
+									GlobalFree(real);
+									GlobalFree(img);
+
+									buffer_size = numofcomplex/2;//k;
+									InvalidateRect(hwnd_main, 0, 1);
 									}
 								}
 								break;
@@ -369,6 +452,12 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				line(hwnd, (double*)pglobalBuffer, 0, buffer_size, step);
 				}
 				break;
+
+				case DRAW_BY_CENTER:
+				{
+				line(hwnd, (double*)pReal, (double*)pImg, buffer_size, step);
+				}
+				break;
 			}
 
 		
@@ -395,7 +484,7 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			/*doublebuffer[i] /=2;
 			imaginaryBuffer[i] /=2;*/
 				//if(scale < 32767)
-				//scale *= 2;
+				scale *= 2;
 
 				if(paintmode == LINE_MODE)
 					paintmode = AMPLITUDE_MODE;
@@ -408,7 +497,7 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			/*doublebuffer[i] *=2;
 			imaginaryBuffer[i] *=2;*/
 				//if(scale > -32768)
-				//scale /= 2;
+				scale /= 2;
 
 				if(paintmode == AMPLITUDE_MODE)
 					paintmode = LINE_MODE;
@@ -416,7 +505,7 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				paintmode++;
 			}
 			
-			if(scale == 0)
+			if(scale <= 0)
 			scale =1;
 			
 
@@ -585,6 +674,13 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			GlobalFree(doublebuffer);*/
 			if(magnitude)
 			GlobalFree(magnitude);
+
+			if(pReal)
+			GlobalFree(pReal);
+
+			if(pImg)
+			GlobalFree(pImg);
+
 		deInitAudioDEvice();
         PostQuitMessage(0);
         break;

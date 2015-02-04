@@ -35,13 +35,16 @@ wchar_t monofilename[MAX_PATH_FILE] = L"C:\\Users\\Gio\\Desktop\\mono.wav";
 WAVE_HEADER w_header_struct = {0};
 BASS_CHANNELINFO music_info = {0};
 void *pglobalBuffer = 0;
+void *pReal = 0;
+void *pImg = 0;
 
 #define FFT_T			1
 #define DEF_T			2
 #define DRAW_FULL_FFT	3
 #define TEST			4
+#define DRAW_BY_CENTER	5
 
-int t_type = TEST, fileisplaying = 0;
+int t_type = DEF_T, fileisplaying = 0;
 
 #define LINE_MODE	1
 #define POINT_MODE	2

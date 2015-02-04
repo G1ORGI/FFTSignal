@@ -202,10 +202,21 @@ hDC = BeginPaint(hwnd, &Ps);
 hPen = CreatePen(PS_SOLID , 2, RGB(255, 0, 0));
 SelectObject(hDC, hPen);
 MoveToEx(hDC, width/2, 0, NULL);
+MoveToEx(hDC, width/2/*width/2*/, 0, NULL);
+
+	SetTextColor(hDC, RGB(255, 255, 255));
+	SetBkColor(hDC, RGB(0, 20, 0));
+
+		LineTo(hDC, width/2, height);
+		TextOutW(hDC,10,0,L"FFT Spectrum",12);
+		TextOutW(hDC,width/2+10,0,L"Real Time Spectrum",18);
+		//paint lines
+		hPen = CreatePen(PS_SOLID , 1, RGB(0, 200, 0));
+		SelectObject(hDC, hPen);
+//sz = width/2;
 //LineTo(hDC, width/2, height);
 
-SetTextColor(hDC, RGB(255, 255, 255));
-SetBkColor(hDC, RGB(0, 20, 0));
+
 wchar_t pos[100] = {0};
 //wsprintfW(pos,L"%d",centerX);
 //TextOutW(hDC,centerX,centerY,pos,10);
@@ -240,14 +251,9 @@ MoveToEx(hDC, 0, height/2, NULL);
 	{
 		if(x)
 		{
-		MoveToEx(hDC, sz/*width/2*/, 0, NULL);
-		LineTo(hDC, sz, height);
-		TextOutW(hDC,10,0,L"FFT Spectrum",12);
-		TextOutW(hDC,sz+10,0,L"Real Time Spectrum",18);
+		
 
-		//paint lines
-		hPen = CreatePen(PS_SOLID , 1, RGB(0, 200, 0));
-		SelectObject(hDC, hPen);
+		
  
 			switch (t_type)
 			{
@@ -256,7 +262,7 @@ MoveToEx(hDC, 0, height/2, NULL);
 					MoveToEx(hDC, centerX + (int)x[0], centerY - (int)y[0], NULL);
 					TextOutW(hDC,centerX + (int)x[0] -10, centerY - (int)y[0],L"s",1);
 
-					for (i = 1; i < sz; i += step)
+					for (i = 1; i < width/2; i += step)
 					{
 						LineTo(hDC, centerX + (x[i]/scale), centerY - (y[i] / scale));
 					}
@@ -314,6 +320,20 @@ MoveToEx(hDC, 0, height/2, NULL);
 				n=0;
 				}
 				break;
+
+				case DRAW_BY_CENTER:
+				{
+				int i = 0;
+				
+				/*MoveToEx(hDC, centerX, centerY, NULL);
+				LineTo(hDC, centerX + 100, centerY - 50);*/
+					for (i = 0; i < sz; i++)
+					{
+					SetPixel(hDC,centerX + (((double*)pReal)[i] / (int)scale),centerY - (((double*)pImg)[i] / (int)scale),RGB(0, 255, 0));
+					}
+				}
+				break;
+
 			default:
 				break;
 			}
@@ -1185,7 +1205,7 @@ ULONG  doubledatalength = 0;
 
 							if(*realOut&&*imageOut)
 							{
-								for (counter = 0; counter < doubledatalength / FFT_SIZE; counter++)
+								//for (counter = 0; counter < doubledatalength / FFT_SIZE; counter++)
 								{
 								k = counter*FFT_SIZE;
 								fft_double(FFT_SIZE,0,doubledata + k,NULL,real,image);
