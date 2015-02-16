@@ -417,6 +417,58 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 								}
 								break;
 
+								case DRAW_BY_CENTER_DYNAMICALY:
+								{
+								fileisplaying = 1;
+								scale = 9000;
+
+								int i = 0, k = 0;
+								double *real = 0, *img = 0, numofcomplex = 0, *sampledata = 0;
+
+								sampledata = (double*)GlobalAlloc(GPTR,sizeof(double)*44100);
+
+								int retval = makeFreqSample(sampledata, 600, 44100,1,32767);
+									if(retval)
+									{
+									numofcomplex = transformMemData(sampledata, 44100, &real,&img);
+
+									pReal = GlobalAlloc(GPTR,sizeof(double)*numofcomplex);
+									pImg = GlobalAlloc(GPTR,sizeof(double)*numofcomplex);
+
+										if(pReal && pImg && real && img && numofcomplex)
+										{
+											for (i = 0; i < numofcomplex/2 ; i += 1)
+											{
+											((double*)pReal)[i] = real[i];
+											((double*)pImg)[i] = img[i];
+											}
+
+										/*int imax = ((double*)pglobalBuffer)[0], maxi = 0;
+
+											for (i = 0; i < numofcomplex/2; i++)
+											{
+												if (imax < ((double*)pglobalBuffer)[i])
+												{
+												imax = ((double*)pglobalBuffer)[i];
+												maxi = i;
+												}
+											}
+
+										float freq = maxi * 44100 / FFT_SIZE;
+										maxfreq = freq;
+
+										indexofmaxfreq = maxi;*/
+
+										GlobalFree(real);
+										GlobalFree(img);
+
+										buffer_size = numofcomplex/2;//k;
+										InvalidateRect(hwnd_main, 0, 1);
+										}
+									}
+								}
+								break;
+
 							default:
 								break;
 							}
@@ -453,6 +505,7 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				}
 				break;
 
+				case DRAW_BY_CENTER_DYNAMICALY:
 				case DRAW_BY_CENTER:
 				{
 				line(hwnd, (double*)pReal, (double*)pImg, buffer_size, step);

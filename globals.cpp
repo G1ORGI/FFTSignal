@@ -43,6 +43,7 @@ void *pImg = 0;
 #define DRAW_FULL_FFT	3
 #define TEST			4
 #define DRAW_BY_CENTER	5
+#define DRAW_BY_CENTER_DYNAMICALY	6
 
 int t_type = DEF_T, fileisplaying = 0;
 

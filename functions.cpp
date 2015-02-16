@@ -321,6 +321,7 @@ MoveToEx(hDC, 0, height/2, NULL);
 				}
 				break;
 
+				case DRAW_BY_CENTER_DYNAMICALY:
 				case DRAW_BY_CENTER:
 				{
 				int i = 0;
@@ -1225,6 +1226,43 @@ ULONG  doubledatalength = 0;
 						}
 					}
 				GlobalFree(data);
+				}
+			}
+		}
+	}
+return numofcomplex;
+}
+
+ULONG transformMemData(double *sampleData, int sizeofdata, double** realOut, double** imageOut)
+{
+
+WAVE_HEADER hdr = {0};
+int i = 0, k = 0, z= 0, counter = 0, datalength = 0, numofcomplex = 0;
+char *data = 0, buffer[1024] = {0};
+double real[FFT_SIZE] = {0}, image[FFT_SIZE] = {0};
+	
+//doubledata = (double*)GlobalAlloc(GPTR, sizeof(double)*sizeofdata);
+
+	if(sampleData && sizeofdata)
+	{
+	*realOut = (double*)GlobalAlloc(GPTR,sizeof(double)* sizeofdata);
+	*imageOut = (double*)GlobalAlloc(GPTR,sizeof(double)* sizeofdata);
+
+		if(*realOut&&*imageOut)
+		{
+			//for (counter = 0; counter < sizeofdata / FFT_SIZE; counter++)
+			{
+			k = counter*FFT_SIZE;
+			fft_double(FFT_SIZE,0,sampleData + k,NULL,real,image);
+				for (z = 0; z < FFT_SIZE/2; z++)
+				{
+				(*realOut)[k/2+z] = real[z];
+				(*imageOut)[k/2+z] = image[z];
+
+				(*realOut)[(FFT_SIZE/2)+(k/2+z)] = real[(FFT_SIZE/2)+z];
+				(*imageOut)[(FFT_SIZE/2)+(k/2+z)] = image[(FFT_SIZE/2)+z];
+
+				numofcomplex += 2;
 				}
 			}
 		}
