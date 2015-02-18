@@ -10,6 +10,11 @@ AppendMenuW(hMenu, MF_STRING, ID_EXIT, L"Exit");
 SetMenu(hwnd, menuBar);
 }
 
+void createButtons(HWND hwnd)
+{
+
+}
+
 //returns size of double buffer
 unsigned long convertCharsToDouble(char* data_buffer, int data_buffer_position, int data_buffer_size, double* dest_buffer)
 {
@@ -210,6 +215,10 @@ MoveToEx(hDC, width/2/*width/2*/, 0, NULL);
 		LineTo(hDC, width/2, height);
 		TextOutW(hDC,10,0,L"FFT Spectrum",12);
 		TextOutW(hDC,width/2+10,0,L"Real Time Spectrum",18);
+
+		wchar_t frq[255] ={0};
+		wsprintfW(frq, L"%d", freqfordynamicdraw);
+		TextOutW(hDC,10,20,frq,wcslen(frq));
 		//paint lines
 		hPen = CreatePen(PS_SOLID , 1, RGB(0, 200, 0));
 		SelectObject(hDC, hPen);

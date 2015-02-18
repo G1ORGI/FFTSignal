@@ -24,52 +24,6 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			switch(LOWORD(wParam))
 			{
-			case 123:
-				{
-			   
-				 
-				   // Open waveform audio for input
-
-				   //waveform.wFormatTag      = WAVE_FORMAT_PCM ;
-				   //waveform.nChannels       = 1 ;
-				   //waveform.nSamplesPerSec  = 11025 ;
-				   //waveform.nAvgBytesPerSec = 11025 ;
-				   //waveform.nBlockAlign     = 1 ;
-				   //waveform.wBitsPerSample  = 8 ;
-				   //waveform.cbSize          = 0 ;
-
-				   //if (waveInOpen (&hWaveIn, WAVE_MAPPER, &waveform,
-							//	   (DWORD) hwnd, 0, CALLBACK_WINDOW))
-				   //{
-					  // free (pBuffer1) ;
-					  // free (pBuffer2) ;
-				   //}
-				   //// Set up headers and prepare them
-
-				   //pWaveHdr1->lpData          =reinterpret_cast <CHAR*>( pBuffer1 ) ;
-				   //pWaveHdr1->dwBufferLength  = INP_BUFFER_SIZE ;
-				   //pWaveHdr1->dwBytesRecorded = 0 ;
-				   //pWaveHdr1->dwUser          = 0 ;
-				   //pWaveHdr1->dwFlags         = 0 ;
-				   //pWaveHdr1->dwLoops         = 1 ;
-				   //pWaveHdr1->lpNext          = NULL ;
-				   //pWaveHdr1->reserved        = 0 ;
-
-				   //waveInPrepareHeader (hWaveIn, pWaveHdr1, sizeof (WAVEHDR)) ;
-
-				   //pWaveHdr2->lpData          = reinterpret_cast <CHAR*>(pBuffer2 ) ;
-				   //pWaveHdr2->dwBufferLength  = INP_BUFFER_SIZE ;
-				   //pWaveHdr2->dwBytesRecorded = 0 ;
-				   //pWaveHdr2->dwUser          = 0 ;
-				   //pWaveHdr2->dwFlags         = 0 ;
-				   //pWaveHdr2->dwLoops         = 1 ;
-				   //pWaveHdr2->lpNext          = NULL ;
-				   //pWaveHdr2->reserved        = 0 ;
-
-				   //waveInPrepareHeader (hWaveIn, pWaveHdr2, sizeof (WAVEHDR)) ;
-
-				}
-				break;
 				case ID_OPEN:
 				{
 					if((BASS_ChannelIsActive(info.hstream_decoded) == BASS_ACTIVE_PLAYING))
@@ -390,20 +344,53 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 										{
 										((double*)pReal)[i] = real[i];
 										((double*)pImg)[i] = img[i];
-										}
 
-									/*int imax = ((double*)pglobalBuffer)[0], maxi = 0;
+											if(abs(GetFrequencyIntensity(((double*)pReal)[i],((double*)pImg)[i])) < 5000000)
+											{
+											((double*)pReal)[i] = 0;
+											((double*)pImg)[i] = 0;
+											}
+										}
+										
+									unsigned int imax = abs(GetFrequencyIntensity(((double*)pReal)[0],((double*)pImg)[0])), maxi = -1, maxre = 0, maxim = 0;
 
 										for (i = 0; i < numofcomplex/2; i++)
 										{
-											if (imax < ((double*)pglobalBuffer)[i])
+											
+											if (imax < abs(GetFrequencyIntensity(((double*)pReal)[i],((double*)pImg)[i])))
 											{
-											imax = ((double*)pglobalBuffer)[i];
+											imax = abs(GetFrequencyIntensity(((double*)pReal)[i],((double*)pImg)[i]));
 											maxi = i;
+											maxre = ((double*)pReal)[i];
+											maxim = ((double*)pImg)[i];
 											}
 										}
 
-									float freq = maxi * 44100 / FFT_SIZE;
+									double*dresult = (double*)GlobalAlloc(GPTR, sizeof(double)* FFT_SIZE);
+									double*imgresult = (double*)GlobalAlloc(GPTR, sizeof(double)* FFT_SIZE);
+
+										if(dresult && imgresult)
+										{
+										fft_double(FFT_SIZE,1,(double*)pReal,(double*)pImg,dresult,imgresult);
+										GlobalFree(imgresult);
+
+										void *waveBuffer = GlobalAlloc(GPTR, sizeof(short) * FFT_SIZE);
+											if(waveBuffer)
+											{
+												for (int i = 0; i < FFT_SIZE; i++)
+												{
+												((short*)waveBuffer)[i] = dresult[i];
+												}
+											WAVE_HEADER h = { 0 };
+											createFullWaveFile(L"C:\\Users\\Gio\\Desktop\\Music\\Signals\\resultt.wav", 44100, 1, 16, &h, waveBuffer, FFT_SIZE * 2);
+
+											GlobalFree(waveBuffer);
+											}
+
+										GlobalFree(dresult);
+										}
+
+									/*float freq = maxi * 44100 / FFT_SIZE;
 									maxfreq = freq;
 
 									indexofmaxfreq = maxi;*/
@@ -427,13 +414,16 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 								sampledata = (double*)GlobalAlloc(GPTR,sizeof(double)*44100);
 
-								int retval = makeFreqSample(sampledata, 600, 44100,1,32767);
+								int retval = makeFreqSample(sampledata, freqfordynamicdraw, 44100,1,15000);
 									if(retval)
 									{
 									numofcomplex = transformMemData(sampledata, 44100, &real,&img);
 
+									if(!pReal && !pImg)
+									{
 									pReal = GlobalAlloc(GPTR,sizeof(double)*numofcomplex);
 									pImg = GlobalAlloc(GPTR,sizeof(double)*numofcomplex);
+									}
 
 										if(pReal && pImg && real && img && numofcomplex)
 										{
@@ -519,43 +509,52 @@ LRESULT CALLBACK proc_main(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case WM_MOUSEWHEEL:
 		{
+		int step = 4;
 		int fwKeys = GET_KEYSTATE_WPARAM(wParam);
 		int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
 		int i = 0, j = 1;
 
-			
-			
-			/*for (i = 0; i < buffer_size; i++)
-			{
-				
-
-			}*/
 
 			if(zDelta < 0 )
 			{
-			//step /= 10;
-			/*doublebuffer[i] /=2;
-			imaginaryBuffer[i] /=2;*/
-				//if(scale < 32767)
+				if(t_type == DRAW_BY_CENTER_DYNAMICALY)
+				{
+					freqfordynamicdraw-=step;
+					if(freqfordynamicdraw<step)
+					freqfordynamicdraw = step;
+				
+					unsigned int msg = 0;
+					msg = MAKEWPARAM(ID_OPEN,0);
+					SendMessageW(hwnd, WM_COMMAND, msg, 0);
+				}
+				else
+				{
 				scale *= 2;
 
-				if(paintmode == LINE_MODE)
-					paintmode = AMPLITUDE_MODE;
-				else
-				paintmode--;
+					if(paintmode == LINE_MODE)
+						paintmode = AMPLITUDE_MODE;
+					else
+					paintmode--;
+				}
 			}
 			else if(zDelta > 0)
 			{
-			//step *= 10;
-			/*doublebuffer[i] *=2;
-			imaginaryBuffer[i] *=2;*/
-				//if(scale > -32768)
+				if(t_type == DRAW_BY_CENTER_DYNAMICALY)
+				{
+				freqfordynamicdraw+=step;
+				unsigned int msg = 0;
+				msg = MAKEWPARAM(ID_OPEN,0);
+				SendMessageW(hwnd, WM_COMMAND, msg, 0);
+				}
+				else
+				{
 				scale /= 2;
 
 				if(paintmode == AMPLITUDE_MODE)
 					paintmode = LINE_MODE;
 				else
 				paintmode++;
+				}
 			}
 			
 			if(scale <= 0)

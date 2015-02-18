@@ -47,6 +47,8 @@ void *pImg = 0;
 
 int t_type = DEF_T, fileisplaying = 0;
 
+int freqfordynamicdraw = 100;
+
 #define LINE_MODE	1
 #define POINT_MODE	2
 #define AMPLITUDE_MODE	3
